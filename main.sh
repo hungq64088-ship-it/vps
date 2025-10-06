@@ -130,7 +130,7 @@ read option
 # Validate input
 if ! [[ "$option" =~ ^[0-9]+$ ]]; then
     echo ""
-    echo -e "${RED}✗ Error:${NC} ${WHITE}Please enter a valid number (1-4)${NC}"
+    echo -e "${RED}✗ Error:${NC} ${WHITE}Please enter a valid number (1-5)${NC}"
     exit 1
 fi
 
@@ -151,15 +151,22 @@ if [ "$option" -eq 1 ]; then
     
     info_msg "Removing sudo (if exists)..."
     export SUDO_FORCE_REMOVE=yes
-    apt remove sudo -y > /dev/null 2>&1
+    apt remove sudo -y
+    echo ""
     
     info_msg "Installing LXDE desktop environment..."
-    apt install lxde -y > /dev/null 2>&1
+    echo ""
+    apt install lxde -y
+    echo ""
     echo -e "${GREEN}✓${NC} LXDE installed"
+    echo ""
     
     info_msg "Installing XRDP server..."
-    apt install xrdp -y > /dev/null 2>&1
+    echo ""
+    apt install xrdp -y
+    echo ""
     echo -e "${GREEN}✓${NC} XRDP installed"
+    echo ""
     
     echo "lxsession -s LXDE -e LXDE" >> /etc/xrdp/startwm.sh
     
@@ -178,34 +185,146 @@ if [ "$option" -eq 1 ]; then
     info_msg "You can now connect using Remote Desktop Connection"
     echo ""
 
-# Option 2: PufferPanel
+# Option 2: XFCE - XRDP (Windows 11 Style)
 elif [ "$option" -eq 2 ]; then
+    clear
+    print_box "Installing XFCE Desktop & XRDP (Windows 11 Style)" "${PURPLE}"
+    echo ""
+    
+    # Kill any lock processes first
+    info_msg "Cleaning up package locks..."
+    killall apt apt-get dpkg 2>/dev/null
+    rm -f /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock 2>/dev/null
+    dpkg --configure -a 2>/dev/null
+    echo -e "${GREEN}✓${NC} Locks cleaned"
+    echo ""
+    
+    info_msg "Updating system packages..."
+    echo ""
+    apt update && apt upgrade -y
+    echo ""
+    echo -e "${GREEN}✓${NC} System updated"
+    echo ""
+    
+    info_msg "Removing sudo (if exists)..."
+    export SUDO_FORCE_REMOVE=yes
+    apt remove sudo -y
+    echo ""
+    
+    info_msg "Installing XFCE desktop environment (this may take 10-15 minutes)..."
+    echo ""
+    apt install xfce4 xfce4-goodies -y
+    echo ""
+    echo -e "${GREEN}✓${NC} XFCE installed"
+    echo ""
+    
+    info_msg "Installing XRDP server..."
+    echo ""
+    apt install xrdp -y
+    echo ""
+    echo -e "${GREEN}✓${NC} XRDP installed"
+    echo ""
+    
+    info_msg "Configuring XFCE for XRDP..."
+    echo "xfce4-session" > /etc/xrdp/startwm.sh
+    chmod +x /etc/xrdp/startwm.sh
+    echo -e "${GREEN}✓${NC} Configuration completed"
+    echo ""
+    
+    info_msg "Installing Windows 11 theme..."
+    echo ""
+    apt install git -y
+    # Download Windows 11 theme
+    cd /tmp
+    git clone https://github.com/yeyushengfan258/Win11OS-kde.git 2>/dev/null || wget https://github.com/yeyushengfan258/Win11OS-kde/archive/refs/heads/master.zip -O win11.zip && unzip -q win11.zip 2>/dev/null
+    
+    # Install icon theme
+    mkdir -p /usr/share/icons
+    if [ -d "Win11OS-kde" ]; then
+        cp -r Win11OS-kde/icons/* /usr/share/icons/ 2>/dev/null
+    fi
+    
+    # Set Windows 11 style wallpaper
+    mkdir -p /usr/share/backgrounds
+    wget -q https://wallpapercave.com/wp/wp9140019.jpg -O /usr/share/backgrounds/win11.jpg 2>/dev/null
+    
+    echo -e "${GREEN}✓${NC} Windows 11 theme installed"
+    echo ""
+    
+    echo ""
+    input_prompt "Select RDP Port (default: 3389):" selectedPort
+    
+    if [ -z "$selectedPort" ]; then
+        selectedPort=3389
+    fi
+    
+    sed -i "s/port=3389/port=$selectedPort/g" /etc/xrdp/xrdp.ini
+    
+    # Enable and start XRDP
+    systemctl enable xrdp 2>/dev/null
+    service xrdp restart > /dev/null 2>&1
+    
+    clear
+    success_msg "XFCE Desktop (Windows 11 Style) is now running on port: ${BOLD}${CYAN}$selectedPort${NC}"
+    echo -e "${CYAN}  Tips for Windows 11 look:${NC}"
+    echo -e "  ${WHITE}1.${NC} After login, right-click desktop → Desktop Settings"
+    echo -e "  ${WHITE}2.${NC} Set wallpaper to Windows 11 style"
+    echo -e "  ${WHITE}3.${NC} Go to Appearance → Style → Choose a modern theme"
+    echo -e "  ${WHITE}4.${NC} Panel → Panel Preferences → Move to bottom for taskbar effect"
+    echo ""
+    info_msg "You can now connect using Remote Desktop Connection"
+    echo ""
+
+# Option 3: PufferPanel
+elif [ "$option" -eq 3 ]; then
     clear
     print_box "Installing PufferPanel" "${PURPLE}"
     echo ""
     
+    # Kill any lock processes first
+    info_msg "Cleaning up package locks..."
+    killall apt apt-get dpkg 2>/dev/null
+    rm -f /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock 2>/dev/null
+    dpkg --configure -a 2>/dev/null
+    echo -e "${GREEN}✓${NC} Locks cleaned"
+    echo ""
+    
     info_msg "Updating system..."
-    (apt update && apt upgrade -y) > /dev/null 2>&1
+    echo ""
+    apt update && apt upgrade -y
+    echo ""
     echo -e "${GREEN}✓${NC} System updated"
+    echo ""
     
     export SUDO_FORCE_REMOVE=yes
-    apt remove sudo -y > /dev/null 2>&1
+    apt remove sudo -y
+    echo ""
     
     info_msg "Installing dependencies..."
-    apt install curl wget git python3 -y > /dev/null 2>&1
+    echo ""
+    apt install curl wget git python3 -y
+    echo ""
     echo -e "${GREEN}✓${NC} Dependencies installed"
+    echo ""
     
     info_msg "Adding PufferPanel repository..."
-    curl -s https://packagecloud.io/install/repositories/pufferpanel/pufferpanel/script.deb.sh | bash > /dev/null 2>&1
-    apt update && apt upgrade -y > /dev/null 2>&1
+    echo ""
+    curl -s https://packagecloud.io/install/repositories/pufferpanel/pufferpanel/script.deb.sh | bash
+    apt update && apt upgrade -y
+    echo ""
     
     info_msg "Setting up systemctl..."
-    curl -o /bin/systemctl https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py > /dev/null 2>&1
+    curl -o /bin/systemctl https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py
     chmod -R 777 /bin/systemctl
+    echo -e "${GREEN}✓${NC} systemctl configured"
+    echo ""
     
     info_msg "Installing PufferPanel..."
-    apt install pufferpanel -y > /dev/null 2>&1
+    echo ""
+    apt install pufferpanel -y
+    echo ""
     echo -e "${GREEN}✓${NC} PufferPanel installed"
+    echo ""
     
     echo ""
     input_prompt "Enter PufferPanel Port (default: 8080):" pufferPanelPort
@@ -232,29 +351,42 @@ elif [ "$option" -eq 2 ]; then
     info_msg "Access panel at: ${BOLD}${CYAN}http://YOUR_IP:$pufferPanelPort${NC}"
     echo ""
 
-# Option 3: Basic Packages
-elif [ "$option" -eq 3 ]; then
+# Option 4: Basic Packages
+elif [ "$option" -eq 4 ]; then
     clear
     print_box "Installing Basic Packages" "${GREEN}"
+    echo ""
+    
+    # Kill any lock processes first
+    info_msg "Cleaning up package locks..."
+    killall apt apt-get dpkg 2>/dev/null
+    rm -f /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock 2>/dev/null
+    dpkg --configure -a 2>/dev/null
+    echo -e "${GREEN}✓${NC} Locks cleaned"
     echo ""
     
     packages=("git" "curl" "wget" "sudo" "lsof" "iputils-ping")
     total=${#packages[@]}
     
     info_msg "Updating system..."
-    apt update && apt upgrade -y > /dev/null 2>&1 &
-    wait $!
+    echo ""
+    apt update && apt upgrade -y
+    echo ""
     echo -e "${GREEN}✓${NC} System updated"
+    echo ""
     
     info_msg "Installing packages..."
-    apt install git curl wget sudo lsof iputils-ping -y > /dev/null 2>&1 &
-    wait $!
+    echo ""
+    apt install git curl wget sudo lsof iputils-ping -y
+    echo ""
     echo -e "${GREEN}✓${NC} Packages installed"
+    echo ""
     
     info_msg "Setting up systemctl..."
-    curl -o /bin/systemctl https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py > /dev/null 2>&1
+    curl -o /bin/systemctl https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl3.py
     chmod -R 777 /bin/systemctl
     echo -e "${GREEN}✓${NC} systemctl configured"
+    echo ""
     
     clear
     success_msg "All basic packages installed successfully!"
@@ -301,24 +433,30 @@ elif [ "$option" -eq 4 ]; then
     
     echo ""
     info_msg "Removing old Node.js versions..."
-    apt remove --purge node* nodejs npm -y > /dev/null 2>&1
+    apt remove --purge node* nodejs npm -y
+    echo ""
     
     info_msg "Updating system..."
-    apt update && apt upgrade -y > /dev/null 2>&1 &
-    wait $!
+    echo ""
+    apt update && apt upgrade -y
+    echo ""
     echo -e "${GREEN}✓${NC} System updated"
+    echo ""
     
     info_msg "Installing curl..."
-    apt install curl -y > /dev/null 2>&1
+    apt install curl -y
+    echo ""
     
     info_msg "Downloading Node.js ${version}.x setup..."
     curl -sL "https://deb.nodesource.com/setup_${version}.x" -o /tmp/nodesource_setup.sh
-    bash /tmp/nodesource_setup.sh > /dev/null 2>&1
+    bash /tmp/nodesource_setup.sh
+    echo ""
     
     info_msg "Installing Node.js ${version}.x..."
-    apt update -y > /dev/null 2>&1
-    apt install -y nodejs > /dev/null 2>&1 &
-    wait $!
+    echo ""
+    apt update -y
+    apt install -y nodejs
+    echo ""
     
     clear
     success_msg "Node.js ${version}.x installed successfully!"
