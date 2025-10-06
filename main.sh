@@ -143,22 +143,22 @@ if [ "$option" -eq 1 ]; then
     echo ""
     
     info_msg "Updating system packages..."
-    apt update && apt upgrade -y > /dev/null 2>&1 &
-    wait $!
+    echo ""
+    apt update && apt upgrade -y
+    echo ""
     echo -e "${GREEN}✓${NC} System updated"
+    echo ""
     
     info_msg "Removing sudo (if exists)..."
     export SUDO_FORCE_REMOVE=yes
     apt remove sudo -y > /dev/null 2>&1
     
     info_msg "Installing LXDE desktop environment..."
-    apt install lxde -y > /dev/null 2>&1 &
-    wait $!
+    apt install lxde -y > /dev/null 2>&1
     echo -e "${GREEN}✓${NC} LXDE installed"
     
     info_msg "Installing XRDP server..."
-    apt install xrdp -y > /dev/null 2>&1 &
-    wait $!
+    apt install xrdp -y > /dev/null 2>&1
     echo -e "${GREEN}✓${NC} XRDP installed"
     
     echo "lxsession -s LXDE -e LXDE" >> /etc/xrdp/startwm.sh
@@ -185,16 +185,14 @@ elif [ "$option" -eq 2 ]; then
     echo ""
     
     info_msg "Updating system..."
-    apt update && apt upgrade -y > /dev/null 2>&1 &
-    wait $!
+    (apt update && apt upgrade -y) > /dev/null 2>&1
     echo -e "${GREEN}✓${NC} System updated"
     
     export SUDO_FORCE_REMOVE=yes
     apt remove sudo -y > /dev/null 2>&1
     
     info_msg "Installing dependencies..."
-    apt install curl wget git python3 -y > /dev/null 2>&1 &
-    wait $!
+    apt install curl wget git python3 -y > /dev/null 2>&1
     echo -e "${GREEN}✓${NC} Dependencies installed"
     
     info_msg "Adding PufferPanel repository..."
@@ -206,8 +204,7 @@ elif [ "$option" -eq 2 ]; then
     chmod -R 777 /bin/systemctl
     
     info_msg "Installing PufferPanel..."
-    apt install pufferpanel -y > /dev/null 2>&1 &
-    wait $!
+    apt install pufferpanel -y > /dev/null 2>&1
     echo -e "${GREEN}✓${NC} PufferPanel installed"
     
     echo ""
